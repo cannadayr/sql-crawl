@@ -57,7 +57,7 @@ static ssize_t read_fd(char **out, int fd) {
 
 static ssize_t shell(char **out, char *cmd, char *data, size_t size) {
   int pipes[NUM_PIPES][2];
-  char *argv[] = { "/bin/sh", "-c", cmd, 0 };
+  char *argv[] = { "/bin/bash", "-c", cmd, 0 };
   pid_t pid;
   ssize_t outSize;
 

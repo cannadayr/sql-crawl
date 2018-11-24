@@ -1,3 +1,6 @@
+m4_divert(KILL)
+m4_divert(GROW)dnl
+
 .load sqlitepipe/sqlitepipe
 
 select

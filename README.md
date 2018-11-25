@@ -15,3 +15,9 @@ sqlite3 pages.db < schema.sql && sqlite3 pages.db < seed_data.sql
 ```
 ## Dependencies
 * libsqlite3-dev
+
+## TODO
+* respect robots.txt
+* better link verification before crawling
+* consolidate whitelist query in wrapper.sh w/ CTE in crawl.sql
+

@@ -36,8 +36,8 @@ select
 from (
     select
         url,
-        printf("%s",pipe('tac | sed ''0,/^References/d'' | tac',full_content)) as content,
-        printf("%s",pipe('tac | sed ''/^References/q'' | head -n -2 | sed ''s/\s\+[0-9]\+\.\s\([^\"]*\)$/\1/''',full_content)) as links
+        printf("%s",pipe('tac | sed ''0,/^References/d'' | tac',full_content)) as content, -- can't quote full_content
+        printf("%s",pipe('tac | sed ''/^References/q'' | head -n -2 | sed ''s/\s\+[0-9]\+\.\s\([^\x27]*\)$/\1/''',full_content)) as links -- can't quote full_content, any url char thats not a single-quote (\x27)
 
     from (
         select

@@ -1,5 +1,6 @@
 ## Overview
 A simple crawler that uses sqlitepipe & lynx to recursively crawl whitelisted domains
+
 USE AT YOUR OWN RISK - possibly unsafe
 
 ## Setup
@@ -24,4 +25,6 @@ sqlite3 pages.db < schema.sql && sqlite3 pages.db < seed_data.sql
 * respect robots.txt
 * better link verification before crawling
 * consolidate whitelist query in wrapper.sh w/ CTE in crawl.sql
+* add full text search
+* add pagerank (or equivalent) algorithm for link prioritization
 

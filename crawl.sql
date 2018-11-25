@@ -14,6 +14,8 @@ with whitelisted_urls as (
 
         where content is null -- TODO add a last_fetched field and query-by
 
+        and is_retired is not 1
+
     ) page on page.domain = whitelist.domain
 
     limit 1

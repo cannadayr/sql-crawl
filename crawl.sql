@@ -19,14 +19,24 @@ with whitelisted_urls as (
     limit 1
 )
 select
-    url
-from whitelist
+    printf("%s",'update page set content = ' || quote(content) || ' where url = ' || quote(url) || ';')
+    || pipe('awk ''{print "insert into page (url) values (\x27" $1 "\x27);"}''',links)
+    || pipe('awk ''{print "insert into link (src_page_id,dest_page_id) values ((select id from page where url = \x27' || quote(url) || '\x27),(select id from page where url = \x27" $1 "\x27));"}''',links)
 
-left outer join (
+from (
     select
         url,
-        printf("%s",pipe('printf ' || page.url || '| sed ''s/^.*:\/\///'' | awk -F"." ''{printf $(NF-1) "." $NF}''')) as domain
+        printf("%s",pipe('tac | sed ''0,/^References/d'' | tac',full_content)) as content,
+        printf("%s",pipe('tac | sed ''/^References/q'' | head -n -2 | sed ''s/\s\+[0-9]\+\.\s\([^\"]*\)$/\1/''',full_content)) as links
 
-    from page
-) page on page.domain = whitelist.domain
+    from (
+        select
+            url,
+            -- the '-nonumbers' options might help w/ full-text search
+            -- however it removes the 'Reference' delimiter making separating links & content easier
+            pipe('lynx -dump -nostatus -notitle -unique_urls ' || quote(url)) as full_content
+
+        from whitelisted_urls
+    )
+)
 ;

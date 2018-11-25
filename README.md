@@ -1,3 +1,7 @@
+## Overview
+A simple crawler that uses sqlitepipe & lynx to recursively crawl whitelisted domains
+USE AT YOUR OWN RISK - possibly unsafe
+
 ## Setup
 * fill out seed_data.sql (see sample_seed_data.sql)
 * compile sqlitepipe extension

@@ -21,9 +21,17 @@ with whitelisted_urls as (
     limit 1
 )
 select
-    printf("%s",'update page set content = ' || quote(content) || ' where url = ' || quote(url) || ';')
-    || pipe('awk ''{print "insert into page (url) values (\x27" $1 "\x27);"}''',links)
-    || pipe('awk ''{print "insert into link (src_page_id,dest_page_id) values ((select id from page where url = \x27' || quote(url) || '\x27),(select id from page where url = \x27" $1 "\x27));"}''',links)
+    --*, -- enable for debugging
+    case when (
+        coalesce(url,'') = ''
+        or coalesce(content,'') = ''
+        -- TODO also confirm that links are valid
+    ) then printf("%s",'update page set is_retired = 1 where url = ' || quote(url) || ';')
+    else
+        printf("%s",'update page set content = ' || quote(content) || ' where url = ' || quote(url) || ';')
+        || pipe('awk ''{print "insert into page (url) values (\x27" $1 "\x27);"}''',links)
+        || pipe('awk ''{print "insert into link (src_page_id,dest_page_id) values ((select id from page where url = \x27' || quote(url) || '\x27),(select id from page where url = \x27" $1 "\x27));"}''',links)
+    end as insert_queries
 
 from (
     select

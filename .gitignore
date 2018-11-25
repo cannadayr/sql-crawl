@@ -1,2 +1,3 @@
 *.swp
 pages.db
+seed_data.sql

@@ -25,7 +25,7 @@ select
     case when (
         coalesce(url,'') = ''
         or coalesce(content,'') = ''
-        -- TODO also confirm that links are valid
+        or pipe('links="$(cat)"; count="$(echo "${links}" | wc -l)"; matches="$(echo "${links}" | grep -P "^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$" | wc -l)"; test "${count}" -eq "${matches}" && printf 0 || printf 1',links)
     ) then printf("%s",'update page set is_retired = 1 where url = ' || quote(url) || ';')
     else
         printf("%s",'update page set content = ' || quote(content) || ' where url = ' || quote(url) || ';')

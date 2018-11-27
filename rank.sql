@@ -1,13 +1,6 @@
 -- The graph data and algorithm source from the book "Mining of Massive Datasets", P175, http://infolab.stanford.edu/~ullman/mmds/book.pdf
 -- This script has been verified the correctness in SQL Server 2017 Linux Version.
 
---compute out-degree
-INSERT INTO OutDegree
-SELECT Node.id, COUNT(Edge.src) --Count(Edge.src) instead of Count(*) for count no out-degree edge
-FROM Node LEFT OUTER JOIN Edge
-ON Node.id = Edge.src
-GROUP BY Node.id;
-
 --WARN: There's no special process for node with out-degree, This may cause wrong result
 --      Please to make sure every node in graph has out-degree
 

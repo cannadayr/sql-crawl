@@ -5,12 +5,12 @@ m4_define([ALPHA],[0.8])
 m4_divert(GROW)dnl
 
 begin transaction;
-with node_num(num_nodes) as (
-    select count(*) as num_nodes from node
+with page_num(num_pages) as (
+    select count(*) as num_pages from page
 )
 
     INSERT INTO tmp_rank
-    SELECT edge.dst, SUM(ALPHA * page_rank.rank / out_degree.degree) + (1 - ALPHA) / (select num_nodes from node_num) as rank
+    SELECT edge.dst, SUM(ALPHA * page_rank.rank / out_degree.degree) + (1 - ALPHA) / (select num_pages from page_num) as rank
     FROM page_rank
     INNER JOIN edge ON page_rank.id = edge.src
     INNER JOIN out_degree ON page_rank.id = out_degree.id

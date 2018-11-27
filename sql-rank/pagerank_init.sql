@@ -5,8 +5,8 @@ m4_divert(GROW)dnl
 --page_rank Init Value
 INSERT INTO page_rank (id, rank)
     SELECT
-        node.id,
-        (1 - ALPHA) / (select count(*) from node) as rank
-    FROM node INNER JOIN out_degree
-    ON node.id = out_degree.id
+        page.id,
+        (1 - ALPHA) / (select count(*) from page) as rank
+    FROM page INNER JOIN out_degree
+    ON page.id = out_degree.id
 ;

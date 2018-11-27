@@ -44,9 +44,9 @@ select
         or coalesce(content,'') = ''
     ) then printf("%s",'update page set is_retired = 1 where url = ' || quote(url) || ';')
     else
-        printf("%s",'update page set content = ' || quote(content) || ' where url = ' || quote(url) || ';')
-        || pipe('awk ''{print "insert into page (url) values (\x27" $1 "\x27);"}''',links)
-        || pipe('awk ''{print "insert into link (src_page_id,dest_page_id) values ((select id from page where url = \x27' || quote(url) || '\x27),(select id from page where url = \x27" $1 "\x27));"}''',links)
+        printf("%s",'begin transaction; update page set content = ' || quote(content) || 'where url = ' || quote(url) || ';')
+        || pipe('while IFS= read -r line; do uri-parser/uri-parser  --protocol --host "${line}" | awk ''BEGIN{ret=1} {if(NF==2){ret=0;}} END{exit ret}'' && { uri-parser/uri-parser --defragment "${line}" | awk ''{print "insert into page (url) values (\x27" $1 "\x27); insert into link (src_page_id,dest_page_id) values ((select id from page where url = \x27' || quote(url) || '\x27), (select id from page where url = \x27" $1 "\x27));" }'';}; done',links)
+        || printf("%s",'commit;')
     end as insert_queries
 
 from (

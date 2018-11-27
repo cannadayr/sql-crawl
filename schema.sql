@@ -20,3 +20,10 @@ create table whitelist (
     unique (domain) on conflict ignore
 );
 
+create table rule (
+    id integer primary key,
+    whitelist_id integer,
+    pattern text,
+    is_allowed integer,
+    unique (whitelist_id,pattern,is_allowed) on conflict ignore
+);

@@ -9,4 +9,4 @@ INSERT INTO PageRank (id, rank)
         (1 - ALPHA) / (select count(*) from Node) as rank
     FROM Node INNER JOIN OutDegree
     ON Node.id = OutDegree.id
-
+;

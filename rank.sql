@@ -10,7 +10,7 @@ with node_num(num_nodes) as (
 )
 
     INSERT INTO TmpRank
-    SELECT Edge.dst, rank = SUM(ALPHA * PageRank.rank / OutDegree.degree) + (1 - ALPHA) / (select num_nodes from node_num)
+    SELECT Edge.dst, SUM(ALPHA * PageRank.rank / OutDegree.degree) + (1 - ALPHA) / (select num_nodes from node_num) as rank
     FROM PageRank
     INNER JOIN Edge ON PageRank.id = Edge.src
     INNER JOIN OutDegree ON PageRank.id = OutDegree.id

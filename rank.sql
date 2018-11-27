@@ -6,19 +6,19 @@ m4_divert(GROW)dnl
 
 begin transaction;
 with node_num(num_nodes) as (
-    select count(*) as num_nodes from Node
+    select count(*) as num_nodes from node
 )
 
-    INSERT INTO TmpRank
-    SELECT Edge.dst, SUM(ALPHA * PageRank.rank / OutDegree.degree) + (1 - ALPHA) / (select num_nodes from node_num) as rank
-    FROM PageRank
-    INNER JOIN Edge ON PageRank.id = Edge.src
-    INNER JOIN OutDegree ON PageRank.id = OutDegree.id
-    GROUP BY Edge.dst;
+    INSERT INTO tmp_rank
+    SELECT edge.dst, SUM(ALPHA * page_rank.rank / out_degree.degree) + (1 - ALPHA) / (select num_nodes from node_num) as rank
+    FROM page_rank
+    INNER JOIN edge ON page_rank.id = edge.src
+    INNER JOIN out_degree ON page_rank.id = out_degree.id
+    GROUP BY edge.dst;
 
-    DELETE FROM PageRank;
-    INSERT INTO PageRank
-    SELECT * FROM TmpRank;
-    DELETE FROM TmpRank;
+    DELETE FROM page_rank;
+    INSERT INTO page_rank
+    SELECT * FROM tmp_rank;
+    DELETE FROM tmp_rank;
 commit;
 

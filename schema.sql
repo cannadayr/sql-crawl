@@ -3,8 +3,25 @@ create table page (
     url text,
     content text,
     is_retired integer, -- set this to '1' if the content is unparseable
-    -- last_fetched timestamp,
+    last_fetched timestamp,
     unique (url) on conflict ignore
+);
+
+--TODO out_degree, page_rank & tmp_rank could probably be fields on the page table
+-- the id's directly corresponds to page_id
+create table out_degree (
+    id integer primary key,
+    degree int
+);
+
+create table page_rank (
+    id integer primary key,
+    rank float
+);
+
+create table tmp_rank (
+    id integer primary key,
+    rank float
 );
 
 create table link (
@@ -27,3 +44,4 @@ create table rule (
     is_allowed integer,
     unique (whitelist_id,pattern,is_allowed) on conflict ignore
 );
+

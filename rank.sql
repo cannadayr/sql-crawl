@@ -4,6 +4,7 @@ m4_divert(KILL)
 m4_define([ALPHA],[0.8])
 m4_divert(GROW)dnl
 
+begin transaction;
 with node_num(num_nodes) as (
     select count(*) as num_nodes from Node
 ),
@@ -21,12 +22,13 @@ iteration(num_iter) as (
     FROM PageRank
     INNER JOIN Edge ON PageRank.id = Edge.src
     INNER JOIN OutDegree ON PageRank.id = OutDegree.id
-    GROUP BY Edge.dst
+    GROUP BY Edge.dst;
 
     DELETE FROM PageRank;
     INSERT INTO PageRank
     SELECT * FROM TmpRank;
     DELETE FROM TmpRank;
 --END
+commit;
 
 --SELECT * FROM PageRank;

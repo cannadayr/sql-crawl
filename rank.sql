@@ -1,21 +1,5 @@
 -- The graph data and algorithm source from the book "Mining of Massive Datasets", P175, http://infolab.stanford.edu/~ullman/mmds/book.pdf
 -- This script has been verified the correctness in SQL Server 2017 Linux Version.
-DROP TABLE Node;
-DROP TABLE Edge;
-DROP TABLE OutDegree;
-DROP TABLE PageRank;
-CREATE TABLE Node(id int PRIMARY KEY);
-CREATE TABLE Edge(src int,dst int, PRIMARY KEY (src, dst));
-CREATE TABLE OutDegree(id int PRIMARY KEY, degree int);
-CREATE TABLE PageRank(id int PRIMARY KEY, rank float);
-CREATE TABLE TmpRank(id int PRIMARY KEY, rank float);
-
---delete all records
-DELETE FROM Node;
-DELETE FROM Edge;
-DELETE FROM OutDegree;
-DELETE FROM PageRank;
-DELETE FROM TmpRank;
 
 --init basic tables
 INSERT INTO Node VALUES (0);

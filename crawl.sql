@@ -64,7 +64,7 @@ from (
             else
                 -- the '-nonumbers' options might help w/ full-text search
                 -- however it removes the 'Reference' delimiter making separating links & content easier
-                pipe('lynx -dump -nostatus -notitle -unique_urls ' || quote(url))
+                pipe('lynx -dump -nostatus -notitle -unique_urls --hiddenlinks=ignore ' || quote(url))
             end as full_content
 
         from whitelisted_url

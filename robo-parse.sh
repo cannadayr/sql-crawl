@@ -37,7 +37,7 @@ printf "%s" "${robots_txt}" \
                         | sed 's#\x27\x5c\x27\x27#\x27\x5c\x27\x27\x27\x5c\x27\x27#g'" '\
         BEGIN{FS=": "} \
         /^disallow/ { \
-            cmd = "printf \"%s\"" $2 " |" to_regex; \
+            cmd = "printf \"%s\" \"" $2 "\" |" to_regex; \
             cmd | getline rule_pattern; \
             close(cmd); \
             print \
@@ -51,7 +51,7 @@ printf "%s" "${robots_txt}" \
                 ");" \
         } \
         /^allow/ { \
-            cmd = "printf \"%s\"" $2 " |" to_regex; \
+            cmd = "printf \"%s\" \"" $2 "\" |" to_regex; \
             cmd | getline rule_pattern; \
             close(cmd); \
             print \

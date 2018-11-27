@@ -38,7 +38,7 @@ disallow_rules(pattern,is_match) as (
         and is_allowed = 0
 )
 select
-    *, -- enable for debugging
+    --*, -- enable for debugging
     case when (
         coalesce(url,'') = ''
         or coalesce(content,'') = ''

@@ -1,10 +1,12 @@
 .load sqlitepipe/sqlitepipe
 
-with whitelisted_url(id,url,path) as (
+with whitelisted_url(id,domain,url,path) as (
    select
-        id,
-        url,
-        path
+        --*,
+        whitelist.id,
+        whitelist.domain,
+        page.url,
+        page.path
     from whitelist
 
     left outer join (
@@ -20,6 +22,8 @@ with whitelisted_url(id,url,path) as (
         and is_retired is not 1
 
     ) page on page.domain = whitelist.domain
+
+    where page.url is not null
 
     limit 1
 ),

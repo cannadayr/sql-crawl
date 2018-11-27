@@ -1,16 +1,19 @@
 .load sqlitepipe/sqlitepipe
 
-with whitelisted_url(id,domain,url,path) as (
+with whitelisted_url(id,domain,url,path,rank) as (
    select
         --*,
         whitelist.id,
         whitelist.domain,
+        --page.id,
         page.url,
-        page.path
+        page.path,
+        page_rank.rank
     from whitelist
 
     left outer join (
         select
+            id,
             url,
             printf("%s",pipe('uri-parser/uri-parser --protocol --host ' || quote(page.url) || ' \
                                 | awk ''BEGIN{FS=" "} {printf $1 "://" $2}''')
@@ -27,7 +30,11 @@ with whitelisted_url(id,domain,url,path) as (
 
     ) page on page.domain = whitelist.domain
 
+    left join page_rank on page_rank.id = page.id
+
     where page.url is not null
+
+    order by page_rank.rank desc
 
     limit 1
 ),

@@ -12,8 +12,12 @@ with whitelisted_url(id,domain,url,path) as (
     left outer join (
         select
             url,
-            printf("%s",pipe('uri-parser/uri-parser --protocol --host ' || quote(page.url) || ' | awk ''BEGIN{FS=" "} {printf $1 "://" $2}''')) as domain,
-            printf("%s",pipe('uri-parser/uri-parser --path ' || quote(page.url) || ' | tr -d ''\n''')) as path
+            printf("%s",pipe('uri-parser/uri-parser --protocol --host ' || quote(page.url) || ' \
+                                | awk ''BEGIN{FS=" "} {printf $1 "://" $2}''')
+            ) as domain,
+            printf("%s",pipe('uri-parser/uri-parser --path ' || quote(page.url) || ' \
+                                | tr -d ''\n''')
+            ) as path
 
         from page
 
@@ -30,7 +34,9 @@ with whitelisted_url(id,domain,url,path) as (
 disallow_rules(pattern,is_match) as (
     select
         pattern,
-        printf("%s",pipe('printf "%s" ' || quote((select path from whitelisted_url)) || ' | awk ''BEGIN{ret=0} /^' || pattern || '/{ret=1} END{printf ret}''')) as is_match
+        printf("%s",pipe('printf "%s" ' || quote((select path from whitelisted_url)) || ' \
+                            | awk ''BEGIN{ret=0} /^' || pattern || '/{ret=1} END{printf ret}''')
+        ) as is_match
     from rule
 
     where
@@ -39,12 +45,14 @@ disallow_rules(pattern,is_match) as (
 )
 select
     --*, -- enable for debugging
+    -- determine parseability
     case when (
         coalesce(url,'') = ''
         or coalesce(content,'') = ''
     ) then printf("%s",'update page set is_retired = 1 where url = ' || quote(url) || ';')
     else
-        printf("%s",'begin transaction; update page set content = ' || quote(content) || 'where url = ' || quote(url) || ';')
+        printf("%s",'begin transaction;')
+        || printf("%s",'update page set content = ' || quote(content) || 'where url = ' || quote(url) || ';')
         || pipe('\
 while IFS= read -r line;
 do
@@ -65,8 +73,9 @@ done',links)
 from (
     select
         url,
-        printf("%s",pipe('tac | sed ''0,/^References/d'' | tac',full_content)) as content, -- can't quote full_content
-        printf("%s",pipe('tac | sed ''/^References/q'' | head -n -2 | sed ''s/\s\+[0-9]\+\.\s\(.*\)$/\1/''',full_content)) as links -- can't quote full_content
+        -- can't quote full_content
+        printf("%s",pipe('tac | sed ''0,/^References/d'' | tac',full_content)) as content,
+        printf("%s",pipe('tac | sed ''/^References/q'' | head -n -2 | sed ''s/\s\+[0-9]\+\.\s\(.*\)$/\1/''',full_content)) as links
 
     from (
         select
@@ -77,6 +86,7 @@ from (
             else
                 -- the '-nonumbers' options might help w/ full-text search
                 -- however it removes the 'Reference' delimiter making separating links & content easier
+                -- TODO we might want to add in hiddenlinks later
                 pipe('lynx -dump -nostatus -notitle -unique_urls --hiddenlinks=ignore ' || quote(url))
             end as full_content
 

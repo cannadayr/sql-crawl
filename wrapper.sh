@@ -1,15 +1,15 @@
 #!/bin/bash
 #TODO combine w/ cte in crawl.sql
-query="
-    select load_extension('sqlitepipe/sqlitepipe');
+query="\
+    select load_extension('sqlitepipe/sqlitepipe'); \
     select \
-        url \
+        page.url \
     from whitelist \
 \
     left outer join ( \
         select \
             url, \
-            printf(\"%s\",pipe('sed ''s/^.*:\/\///'' | sed ''s/\([^\/]*\)\/.*/\1/'' | awk -F\".\" ''{printf \$(NF-1) \".\" \$NF}''',page.url)) as domain \
+            printf(\"%s\",pipe('uri-parser/uri-parser --protocol --host ' || quote(page.url) || ' | awk ''BEGIN{FS=\" \"} {printf \$1 \"://\" \$2 }''')) as domain \
 \
         from page \
 \
@@ -19,6 +19,7 @@ query="
 \
     ) page on page.domain = whitelist.domain \
 \
+    where page.url is not null \
     limit 1 \
 ;"
 url="$(printf "%s" "${query}" | sqlite3 pages.db | tr -d '\n')"

@@ -1,21 +1,6 @@
 -- The graph data and algorithm source from the book "Mining of Massive Datasets", P175, http://infolab.stanford.edu/~ullman/mmds/book.pdf
 -- This script has been verified the correctness in SQL Server 2017 Linux Version.
 
---init basic tables
-INSERT INTO Node VALUES (0);
-INSERT INTO Node VALUES (1);
-INSERT INTO Node VALUES (2);
-INSERT INTO Node VALUES (3);
-
-INSERT INTO Edge VALUES (0, 1);
-INSERT INTO Edge VALUES (0, 2);
-INSERT INTO Edge VALUES (0, 3);
-INSERT INTO Edge VALUES (1, 0);
-INSERT INTO Edge VALUES (1, 3);
-INSERT INTO Edge VALUES (2, 2);
-INSERT INTO Edge VALUES (3, 1);
-INSERT INTO Edge VALUES (3, 2);
-
 --compute out-degree
 INSERT INTO OutDegree
 SELECT Node.id, COUNT(Edge.src) --Count(Edge.src) instead of Count(*) for count no out-degree edge

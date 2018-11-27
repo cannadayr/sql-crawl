@@ -1,9 +1,10 @@
 #!/bin/bash
 
-iter=0
+iter=1
 
-while test "${iter}" -lt 10
+while test "${iter}" -lt 2
 do
     echo "${iter}"
+    sqlite3 -echo links.db < <(autom4te -l m4sugar rank.sql)
     iter=$(echo "${iter} + 1" | bc)
 done

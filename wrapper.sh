@@ -29,7 +29,7 @@ while test -n "${url}"
 do
     sqlite3 pages.db < crawl.sql | sqlite3 -echo pages.db
     echo
-    sleep 1
+    sleep 10
     url="$(printf "%s" "${query}" | sqlite3 pages.db | tr -d '\n')"
     echo "url = ${url}"
 done

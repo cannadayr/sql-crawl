@@ -1,16 +1,15 @@
 -- The graph data and algorithm source from the book "Mining of Massive Datasets", P175, http://infolab.stanford.edu/~ullman/mmds/book.pdf
 -- This script has been verified the correctness in SQL Server 2017 Linux Version.
+m4_divert(KILL)
+m4_define([ALPHA],[0.8])
+m4_divert(GROW)dnl
 
---WARN: There's no special process for node with out-degree, This may cause wrong result
---      Please to make sure every node in graph has out-degree
-
-DECLARE @ALPHA float = 0.8;
 DECLARE @Node_Num int;
 SELECT @Node_Num = COUNT(*) FROM Node;
 
 --PageRank Init Value
 INSERT INTO PageRank
-SELECT Node.id, rank = (1 - @ALPHA) / @Node_Num
+SELECT Node.id, rank = (1 - ALPHA) / @Node_Num
 FROM Node INNER JOIN OutDegree
 ON Node.id = OutDegree.id
 
@@ -31,7 +30,7 @@ BEGIN
     SET @Iteration = @Iteration + 1
 
     INSERT INTO TmpRank
-    SELECT Edge.dst, rank = SUM(@ALPHA * PageRank.rank / OutDegree.degree) + (1 - @ALPHA) / @Node_Num
+    SELECT Edge.dst, rank = SUM(ALPHA * PageRank.rank / OutDegree.degree) + (1 - ALPHA) / @Node_Num
     FROM PageRank
     INNER JOIN Edge ON PageRank.id = Edge.src
     INNER JOIN OutDegree ON PageRank.id = OutDegree.id

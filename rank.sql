@@ -4,27 +4,20 @@ m4_divert(KILL)
 m4_define([ALPHA],[0.8])
 m4_divert(GROW)dnl
 
-DECLARE @Node_Num int;
-SELECT @Node_Num = COUNT(*) FROM Node;
+with node_num(num_nodes) as (
+    select count(*) as num_nodes from Node
+),
+iteration(num_iter) as (
+    select 0 as num_iter
+)
 
-/*
---For Debugging
-SELECT * FROM Node;
-SELECT * FROM Edge;
-SELECT * FROM OutDegree;
-SELECT * FROM PageRank;
-SELECT * FROM TmpRank;
-*/
-
-DECLARE @Iteration int = 0;
-
-WHILE @Iteration < 50
-BEGIN
+--WHILE @Iteration < 50
+--BEGIN
 --Iteration Style
-    SET @Iteration = @Iteration + 1
+    --SET @Iteration = @Iteration + 1 -- TODO increment in caller script
 
     INSERT INTO TmpRank
-    SELECT Edge.dst, rank = SUM(ALPHA * PageRank.rank / OutDegree.degree) + (1 - ALPHA) / @Node_Num
+    SELECT Edge.dst, rank = SUM(ALPHA * PageRank.rank / OutDegree.degree) + (1 - ALPHA) / (select num_nodes from node_num)
     FROM PageRank
     INNER JOIN Edge ON PageRank.id = Edge.src
     INNER JOIN OutDegree ON PageRank.id = OutDegree.id
@@ -34,6 +27,6 @@ BEGIN
     INSERT INTO PageRank
     SELECT * FROM TmpRank;
     DELETE FROM TmpRank;
-END
+--END
 
-SELECT * FROM PageRank;
+--SELECT * FROM PageRank;

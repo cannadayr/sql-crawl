@@ -24,6 +24,59 @@ query="\
 ;"
 url="$(printf "%s" "${query}" | sqlite3 pages.db | tr -d '\n')"
 
+# clear page_rank table
+# clear tmp_rank table
+# clear out_degree table
+clear_query="\
+    delete from out_degree; \
+    delete from page_rank; \
+    delete from tmp_rank; \
+"
+
+# computes out-degrees
+# NOTE- every page in graph must have an out-degree!
+out_degree_init=" \
+    insert into out_degree \
+    select \
+        page.id, \
+        count(link.src_page_id) \
+    from page \
+    left outer join link on link.src_page_id = page.id \
+    group by page.id \
+; \
+"
+
+alpha="0.8"
+page_rank_init=" \
+    insert into page_rank (id,rank) \
+    select \
+        page.id, \
+        (1 - ${alpha}) / (select count(*) from page) as rank \
+    from page \
+    inner join out_degree on out_degree.id = page.id \
+; \
+"
+
+page_rank_compute=" \
+    begin transaction; \
+    insert into tmp_rank \
+    select \
+        link.dest_page_id, \
+        sum(${alpha} * page_rank.rank / out_degree.degree) \
+        + (1 - ${alpha}) / (select count(*) from page) as rank \
+    from page_rank \
+    inner join link on link.src_page_id = page_rank.id \
+    inner join out_degree on out_degree.id = page_rank.id \
+    group by link.dest_page_id; \
+\
+    delete from page_rank; \
+    insert into page_rank \
+    select * from tmp_rank; \
+    delete from tmp_rank; \
+    commit; \
+"
+
+
 echo "url = ${url}"
 while test -n "${url}"
 do

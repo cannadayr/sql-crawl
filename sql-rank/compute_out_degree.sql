@@ -1,7 +1,7 @@
 INSERT INTO out_degree
-SELECT page.id, COUNT(edge.src) --Count(edge.src) instead of Count(*) for count no out-degree edge
-FROM page LEFT OUTER JOIN edge
-ON page.id = edge.src
+SELECT page.id, COUNT(link.src) --Count(link.src) instead of Count(*) for count no out-degree link
+FROM page LEFT OUTER JOIN link
+ON page.id = link.src
 GROUP BY page.id;
 
 --WARN: There's no special process for page with out-degree, This may cause wrong result

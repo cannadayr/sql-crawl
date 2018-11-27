@@ -10,11 +10,11 @@ with page_num(num_pages) as (
 )
 
     INSERT INTO tmp_rank
-    SELECT edge.dst, SUM(ALPHA * page_rank.rank / out_degree.degree) + (1 - ALPHA) / (select num_pages from page_num) as rank
+    SELECT link.dst, SUM(ALPHA * page_rank.rank / out_degree.degree) + (1 - ALPHA) / (select num_pages from page_num) as rank
     FROM page_rank
-    INNER JOIN edge ON page_rank.id = edge.src
+    INNER JOIN link ON page_rank.id = link.src
     INNER JOIN out_degree ON page_rank.id = out_degree.id
-    GROUP BY edge.dst;
+    GROUP BY link.dst;
 
     DELETE FROM page_rank;
     INSERT INTO page_rank

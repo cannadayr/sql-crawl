@@ -49,55 +49,99 @@ disallow_rules(pattern,is_match) as (
     where
         whitelist_id = (select id from whitelisted_url)
         and is_allowed = 0
-)
-select
-    --*, -- enable for debugging
-    -- determine parseability
-    case when (
-        coalesce(url,'') = ''
-        or coalesce(content,'') = ''
-    ) then printf("%s",'update page set is_retired = 1 where url = ' || quote(url) || ';')
-    else
-        printf("%s",'begin transaction;')
-        || printf("%s",'update page set content = ' || quote(content) || 'where url = ' || quote(url) || ';')
-        || pipe('\
-while IFS= read -r line;
-do
-    uri-parser/uri-parser  --protocol --host "${line}" \
-        | awk ''BEGIN{ret=1} {if(NF==2){ret=0;}} END{exit ret}'' && { \
-            uri-parser/uri-parser --defragment "${line}" \
-            | awk ''{print \
-                        "insert into page (url) values (\x27" $1 "\x27);" \
-                        "insert into link (src_page_id,dest_page_id) values (" \
-                            "(select id from page where url = \x27' || quote(url) || '\x27)," \
-                            "(select id from page where url = \x27" $1 "\x27)" \
-                        ");" \
-            }''; \
-        };
-done',links)
-        || printf("%s",'commit;')
-    end as insert_queries
-from (
+),
+disallow_match(num_matches) as (
+    select
+        count(is_match)
+    from
+        disallow_rules
+    where is_match = "1"
+),
+fetch_content(url,full_content) as (
+    select
+        url,
+        case when (
+            (select num_matches from disallow_match) >= 1
+        ) then printf("%s","") -- just return the empty str and we'll catch it later
+        else
+            -- the '-nonumbers' options might help w/ full-text search
+            -- however it removes the 'Reference' delimiter making separating links & content easier
+            -- TODO we might want to add in hiddenlinks later
+            pipe('lynx -dump -nostatus -notitle -unique_urls --hiddenlinks=ignore ' || quote(url))
+        end as full_content
+
+    from whitelisted_url
+),
+parse_content(url,content) as (
     select
         url,
         -- can't quote full_content
-        printf("%s",pipe('tac | sed ''0,/^References/d'' | tac',full_content)) as content,
-        printf("%s",pipe('tac | sed ''/^References/q'' | head -n -2 | sed ''s/\s\+[0-9]\+\.\s\(.*\)$/\1/''',full_content)) as links
+        printf("%s",pipe('tac | sed ''0,/^References/d'' | tac',full_content)) as content
 
-    from (
-        select
-            url,
-            case when (
-                (select count(is_match) from disallow_rules where is_match = "1") >= 1
-            ) then printf("%s","") -- just return the empty str and we'll catch it later
-            else
-                -- the '-nonumbers' options might help w/ full-text search
-                -- however it removes the 'Reference' delimiter making separating links & content easier
-                -- TODO we might want to add in hiddenlinks later
-                pipe('lynx -dump -nostatus -notitle -unique_urls --hiddenlinks=ignore ' || quote(url))
-            end as full_content
+    from fetch_content
+),
+parse_links(url,links) as (
+    select
+        url,
+        printf("%s",pipe('tac | sed ''/^References/q'' | head -n -2 | sed ''s/\s\+[0-9]\+\.\s//'' \
+| while IFS= read -r line; \
+do \
+    uri-parser/uri-parser  --protocol --host "${line}" \
+        | awk ''BEGIN{ret=1} {if(NF==2){ret=0;}} END{exit ret}'' && { \
+            uri-parser/uri-parser --defragment "${line}"; \
+        } \
+done; true',full_content)) as links
 
-        from whitelisted_url
-    )
+    from fetch_content
+),
+link_inserts(link_insert_queries) as (
+    select
+        printf("%s",pipe('awk ''{print \
+                            "insert into page (url) values (\x27" $1 "\x27);\n" \
+                            "insert into link (src_page_id,dest_page_id) values (" \
+                                "(select id from page where url = \x27' || quote(url) || '\x27)," \
+                                "(select id from page where url = \x27" $1 "\x27)" \
+                            ");"}''',links)) as link_insert_queries
+
+    from parse_links
+),
+content_insert(content_insert_query) as (
+    select
+        printf("%s",'update page set content = ' || quote(content) || 'where url = ' || quote(url) || ';')
+
+    from
+        parse_content
+),
+full_insert(insert_queries) as (
+    select
+        -- determine parseability
+        case when (
+            coalesce(whitelisted_url.url,'') = ''
+            or coalesce(parse_content.content,'') = ''
+        ) then printf("%s",'update page set is_retired = 1 where url = ' || quote(whitelisted_url.url) || ';')
+        else
+            printf("%s",'begin transaction;')
+            || content_insert.content_insert_query
+            || link_inserts.link_insert_queries
+            || printf("%s",'commit;')
+        end as insert_queries
+
+    from content_insert,link_inserts,whitelisted_url,parse_content
 )
+select
+    --whitelisted_url.domain,
+    --whitelisted_url.url,
+    --whitelisted_url.path,
+    --whitelisted_url.rank,
+    --parse_links.links,
+    --link_inserts.link_insert_queries,
+    --content_insert.content_insert_query,
+    full_insert.insert_queries
+
+from
+    --whitelisted_url,
+    --parse_links,
+    --link_inserts,
+    --content_insert,
+    full_insert
 ;

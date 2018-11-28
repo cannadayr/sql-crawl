@@ -77,7 +77,7 @@ page_rank_compute=" \
 "
 
 
-echo "url = ${url}"
+#echo "url = ${url}"
 while test -n "${url}"
 do
     sqlite3 pages.db < crawl.sql | sqlite3 -echo pages.db
@@ -97,12 +97,13 @@ do
     # compute page_rank
     iter=1
 
-    while test "${iter}" -lt 50
+    while test "${iter}" -lt 5
     do
         printf "%s" "${page_rank_compute}" | sqlite3 pages.db
         iter=$(echo "${iter} + 1" | bc)
     done
 
     url="$(printf "%s" "${query}" | sqlite3 pages.db | tr -d '\n')"
-    echo "url = ${url}"
+    #echo "url = ${url}"
 done
+

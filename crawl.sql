@@ -2,7 +2,6 @@
 
 with whitelisted_url(id,domain,url,path,rank) as (
    select
-        --*,
         whitelist.id,
         whitelist.domain,
         --page.id,
@@ -68,11 +67,13 @@ fetch_content(url,full_content) as (
             -- the '-nonumbers' options might help w/ full-text search
             -- however it removes the 'Reference' delimiter making separating links & content easier
             -- TODO we might want to add in hiddenlinks later
+            -- TODO handle response code
             pipe('lynx -dump -nostatus -notitle -unique_urls --hiddenlinks=ignore ' || quote(url))
         end as full_content
 
     from whitelisted_url
 ),
+-- gets the content from lynx's output
 parse_content(url,content) as (
     select
         url,
@@ -81,6 +82,7 @@ parse_content(url,content) as (
 
     from fetch_content
 ),
+-- gets the links from lynx's output
 parse_links(url,links) as (
     select
         url,

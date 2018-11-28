@@ -18,8 +18,8 @@ with whitelisted_url(id,domain,url,path,rank) as (
             printf("%s",pipe('uri-parser/uri-parser --protocol --host ' || quote(page.url) || ' \
                                 | awk ''BEGIN{FS=" "} {printf $1 "://" $2}''')
             ) as domain,
-            printf("%s",pipe('uri-parser/uri-parser --path ' || quote(page.url) || ' \
-                                | tr -d ''\n''')
+            printf("%s",pipe('uri-parser/uri-parser --path --query ' || quote(page.url) || ' \
+                                | tr -d ''\n'' | tr '' '' ?')
             ) as path
 
         from page

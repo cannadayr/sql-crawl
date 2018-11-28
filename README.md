@@ -4,8 +4,8 @@ A minimal web spider and indexer
 USE AT YOUR OWN RISK - possibly unsafe
 
 Currently implemented:
-    * robots.txt disallow rules (untested)
-    * pagerank (needs tuning)
+* robots.txt disallow rules (untested)
+* pagerank (needs tuning)
 
 ## Dependencies
 * lynx

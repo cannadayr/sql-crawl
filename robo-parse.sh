@@ -29,18 +29,9 @@ printf "%s" "${robots_txt}" \
     | tr '[:upper:]' '[:lower:]' \
     | tr -d '\015' \
     | awk 'BEGIN{RS="user-agent: "} /^lynx/{print} /^\*/{print}' \
-    | awk -v domain="${domain}" \
-          -v to_regex="sed 's#\x5c/#\x5c\x5c\x5c/#g' \
-                        | sed 's#\x5c.\x5c*#*#g' \
-                        | sed 's#\x5c?#\x5c\x5c?#g' \
-                        | sed 's#\x5c+#\x5c\x5c+#g' \
-                        | sed 's#\x5c*#.*#g' \
-                        | sed 's#\x27\x5c\x27\x27#\x27\x5c\x27\x27\x27\x5c\x27\x27#g'" '\
+    | awk -v domain="${domain}" '\
         BEGIN{FS=": "} \
         /^disallow/ { \
-            cmd = "printf \"%s\" \"" $2 "\" |" to_regex; \
-            cmd | getline rule_pattern; \
-            close(cmd); \
             print \
                 "insert into \"rule\" (" \
                     "whitelist_id," \
@@ -48,13 +39,10 @@ printf "%s" "${robots_txt}" \
                     "is_allowed" \
                 ") values (" \
                     "(select id from whitelist where domain = \x27" domain "\x27)," \
-                    "\x27" rule_pattern "\x27, 0" \
+                    "\x27" $2 "\x27, 0" \
                 ");" \
         } \
         /^allow/ { \
-            cmd = "printf \"%s\" \"" $2 "\" |" to_regex; \
-            cmd | getline rule_pattern; \
-            close(cmd); \
             print \
                 "insert into \"rule\" (" \
                     "whitelist_id," \
@@ -62,6 +50,6 @@ printf "%s" "${robots_txt}" \
                     "is_allowed" \
                 ") values (" \
                     "(select id from whitelist where domain = \x27" domain "\x27)," \
-                    "\x27" rule_pattern "\x27, 1);"}'
+                    "\x27" $2 "\x27, 1);"}'
 
 

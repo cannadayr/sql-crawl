@@ -96,12 +96,17 @@ done; true',full_content)) as links
 ),
 link_inserts(link_insert_queries) as (
     select
-        printf("%s",pipe('awk ''{print \
-                            "insert into page (url) values (\x27" $1 "\x27);\n" \
-                            "insert into link (src_page_id,dest_page_id) values (" \
-                                "(select id from page where url = \x27' || quote(url) || '\x27)," \
-                                "(select id from page where url = \x27" $1 "\x27)" \
-                            ");"}''',links)) as link_insert_queries
+        case when (
+            (select num_matches from disallow_match) >= 1
+        ) then printf("%s","") -- just return the empty str and we'll catch it later
+        else
+            printf("%s",pipe('awk ''{print \
+                                "insert into page (url) values (\x27" $1 "\x27);\n" \
+                                "insert into link (src_page_id,dest_page_id) values (" \
+                                    "(select id from page where url = \x27' || quote(url) || '\x27)," \
+                                    "(select id from page where url = \x27" $1 "\x27)" \
+                                ");"}''',links))
+        end as link_insert_queries
 
     from parse_links
 ),

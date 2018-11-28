@@ -14,14 +14,6 @@ robots_txt=$(wget -qO- ${robots_url})
 # get the rules for the following user-agent sections:
 #   Lynx*, *,
 # get the disallowed paths & convert to regex pattern
-#   expects no trailing backslash
-#   transform pattern to valid regex
-#   /  -> \/
-#   .* -> *
-#   ?  -> \?
-#   +  -> \+
-#   *  -> .*
-#   '  -> ''
 # insert the rules into the db
 printf "%s" "${robots_txt}" \
     | sed 's/#.*$//g' \

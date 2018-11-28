@@ -39,12 +39,12 @@ with whitelisted_url(id,domain,url,path,rank) as (
 
     limit 1
 ),
+-- TODO this is only working on whitelisted_url, NOT every link we get from it #fixme
+-- maybe we could not return the globbed pattern and join on it as-needed?
 disallow_rules(pattern,is_match) as (
     select
         pattern,
-        printf("%s",pipe('printf "%s" ' || quote((select path from whitelisted_url)) || ' \
-                            | awk ''BEGIN{ret=0} /^' || pattern || '/{ret=1} END{printf ret}''')
-        ) as is_match
+        glob(pattern || '*' ,(select path from whitelisted_url)) as is_match
     from rule
 
     where

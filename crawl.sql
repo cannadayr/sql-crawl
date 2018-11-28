@@ -19,6 +19,7 @@ with whitelisted_url(id,domain,url,path,rank) as (
                                 | awk ''BEGIN{FS=" "} {printf $1 "://" $2}''')
             ) as domain,
             printf("%s",pipe('uri-parser/uri-parser --path --query ' || quote(page.url) || ' \
+                                | awk ''BEGIN{FS=" "} {if($1==$2){print $1;}else{print $1 " " $2;}}'' \
                                 | tr -d ''\n'' | tr '' '' ?')
             ) as path
 

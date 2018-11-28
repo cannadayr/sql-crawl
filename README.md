@@ -30,3 +30,11 @@ sqlite3 pages.db < schema.sql && sqlite3 pages.db < seed_data.sql
 * add bayesian spam filtering
 * add pagerank (or equivalent) algorithm for link prioritization
 
+## PageRank Attribution
+Taken from the [Stack Overflow network](https://stackoverflow.com)
+
+[Original question](https://stackoverflow.com/questions/17787944/sql-pagerank-implementation)
+
+Answer provided by: [Geng Liang](https://stackoverflow.com/users/5914124/geng-liang)
+
+[Attribution details](https://stackoverflow.blog/2009/06/25/attribution-required/)

@@ -86,36 +86,63 @@ parse_content(url,content) as (
 parse_links(url,links) as (
     select
         url,
-        printf("%s",pipe('tac | sed ''/^References/q'' | head -n -2 | sed ''s/\s\+[0-9]\+\.\s//'' \
-| while IFS= read -r line; \
-do \
-    uri-parser/uri-parser  --protocol --host "${line}" \
-        | awk ''BEGIN{ret=1} {if(NF==2){ret=0;}} END{exit ret}'' && { \
-            uri-parser/uri-parser --defragment "${line}"; \
-        } \
-done; true',full_content)) as links
+        printf("%s",pipe('tac | sed ''/^References/q'' | head -n -2 | sed ''s/\s\+[0-9]\+\.\s//''',full_content)) as links
 
     from fetch_content
 ),
-link_inserts(link_insert_queries) as (
+-- https://stackoverflow.com/questions/34659643/split-a-string-into-rows-using-pure-sqlite
+-- https://stackoverflow.com/users/11654/cl
+-- creates a tmp tbl w/ the parsed links
+split_links(word,str,hasnewline) as (
+    values('',(select links from parse_links),1)
+    union all
+    select
+        substr(str, 0,
+            case when instr(str, x'0a')
+            then instr(str, x'0a')
+            else length(str)+1 end),
+        ltrim(substr(str, instr(str, x'0a')), x'0a'),
+        instr(str, x'0a')
+        from split_links
+        where hasnewline
+),
+link_tbl(link) as (
+    select trim(word) FROM split_links WHERE word!=''
+),
+defragment_links(url) as (
+    select
+        -- get the distinct, defragmented urls
+        distinct(printf("%s",pipe('xargs uri-parser/uri-parser --defragment | tr -d ''\n''',link))) as url
+
+    from link_tbl
+),
+-- validates that we have a protocol and a host (avoid javascript:void(0) for example)
+validate_links(url) as (
     select
         case when (
-            (select num_matches from disallow_match) >= 1
-        ) then printf("%s","") -- just return the empty str and we'll catch it later
-        else
-            printf("%s",pipe('awk ''{print \
-                                "insert into page (url) values (\x27" $1 "\x27);\n" \
-                                "insert into link (src_page_id,dest_page_id) values (" \
-                                    "(select id from page where url = \x27' || quote(url) || '\x27)," \
-                                    "(select id from page where url = \x27" $1 "\x27)" \
-                                ");"}''',links))
-        end as link_insert_queries
+            pipe('xargs uri-parser/uri-parser  --protocol --host \
+                    | awk ''{if(NF==2){printf "1"}}''',url)
+        ) then url
+        end as url
 
-    from parse_links
+    from defragment_links
+),
+-- this does not check that this inserted link is allowed to be crawled
+-- only creates a new record for it
+link_inserts(link_insert_queries) as (
+    select
+        printf("%s",x'0a' || 'insert into page (url) values (' || quote(url) || ');')
+        || printf("%s",x'0a' || 'insert into link (src_page_id,dest_page_id) values ('
+                                || '(select id from page where url = ' || (select quote(url) from whitelisted_url) || '),'
+                                || '(select id from page where url = ' || quote(url) || '));') as link_insert_queries
+
+    from validate_links
+
+    where coalesce(url,'')  <> ''
 ),
 content_insert(content_insert_query) as (
     select
-        printf("%s",'update page set content = ' || quote(content) || 'where url = ' || quote(url) || ';')
+        printf("%s",'update page set content = ' || quote(content) || ' where url = ' || quote(url) || ';')
 
     from
         parse_content
@@ -128,28 +155,38 @@ full_insert(insert_queries) as (
             or coalesce(parse_content.content,'') = ''
         ) then printf("%s",'update page set is_retired = 1 where url = ' || quote(whitelisted_url.url) || ';')
         else
-            printf("%s",'begin transaction;')
-            || content_insert.content_insert_query
-            || link_inserts.link_insert_queries
-            || printf("%s",'commit;')
+            printf("%s",x'0a' || 'begin transaction;')
+            || x'0a' || content_insert.content_insert_query
+            || group_concat(link_insert_queries,'')
+            || printf("%s",x'0a' || 'commit;')
         end as insert_queries
 
-    from content_insert,link_inserts,whitelisted_url,parse_content
+    from content_insert,whitelisted_url,parse_content,link_inserts
 )
 select
-    --whitelisted_url.domain,
-    --whitelisted_url.url,
-    --whitelisted_url.path,
-    --whitelisted_url.rank,
-    --parse_links.links,
-    --link_inserts.link_insert_queries,
-    --content_insert.content_insert_query,
+    --whitelisted_url.*,
+    --disallow_rules.*,
+    --fetch_content.*,
+    --parse_content.*
+    --parse_links.*
+    --link_tbl.*,
+    --validate_links.*,
+    --link_inserts.*,
+    --content_insert.*,
+    -- to enable we only want to return the full_insert queries!
     full_insert.insert_queries
 
 from
     --whitelisted_url,
+    --disallow_rules,
+    --fetch_content,
+    --parse_content,
     --parse_links,
+    --link_tbl,
+    --validate_links,
     --link_inserts,
     --content_insert,
     full_insert
+
+--limit 10
 ;

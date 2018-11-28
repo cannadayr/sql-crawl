@@ -1,7 +1,17 @@
 ## Overview
-A simple crawler that uses sqlitepipe & lynx to recursively crawl whitelisted domains
+A minimal web spider and indexer
 
 USE AT YOUR OWN RISK - possibly unsafe
+
+Currently implemented:
+    * robots.txt disallow rules (untested)
+    * pagerank (needs tuning)
+
+## Dependencies
+* lynx
+* sqlite3
+* libsqlite3-dev
+* sqlitepipe
 
 ## Setup
 * fill out seed_data.sql (see sample_seed_data.sql)
@@ -13,6 +23,10 @@ cd sqlitepipe/ && make
 ```
 sqlite3 pages.db < schema.sql && sqlite3 pages.db < seed_data.sql
 ```
+* initialize robots.txt for a domain (no trailing backslash!)
+```
+./robo-parse.sh https://example.com
+```
 
 ## Usage
 ```
@@ -22,13 +36,14 @@ sqlite3 pages.db < schema.sql && sqlite3 pages.db < seed_data.sql
 * libsqlite3-dev
 
 ## TODO
-* respect robots.txt
+* more thorough robots.txt testing
+    * add in 'allow' logic
 * respect 429 ratelimit responses
-* better link verification before crawling
+* respect 'crawl-delay' rules
 * consolidate whitelist query in wrapper.sh w/ CTE in crawl.sql
 * add full text search
 * add bayesian spam filtering
-* add pagerank (or equivalent) algorithm for link prioritization
+* tuning of PageRank's 'alpha' parameter & iteration count
 
 ## PageRank Attribution
 Taken from the [Stack Overflow network](https://stackoverflow.com)

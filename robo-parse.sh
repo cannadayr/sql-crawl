@@ -27,6 +27,7 @@ printf "%s" "${robots_txt}" \
     | sed 's/#.*$//g' \
     | sed '/^\s*$/d' \
     | tr '[:upper:]' '[:lower:]' \
+    | tr -d '\015' \
     | awk 'BEGIN{RS="user-agent: "} /^lynx/{print} /^\*/{print}' \
     | awk -v domain="${domain}" \
           -v to_regex="sed 's#\x5c/#\x5c\x5c\x5c/#g' \

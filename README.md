@@ -25,7 +25,7 @@ sqlite3 pages.db < schema.sql && sqlite3 pages.db < seed_data.sql
 ```
 * initialize robots.txt for a domain (no trailing backslash!)
 ```
-./robo-parse.sh https://example.com
+./robo-parse.sh https://example.com | sqlite3 pages.db
 ```
 
 ## Usage

@@ -3,7 +3,7 @@ create table page (
     url text,
     content text,
     is_retired integer, -- set this to '1' if the content is unparseable
-    last_fetched timestamp,
+    last_fetched timestamp default current_timestamp,
     unique (url) on conflict ignore
 );
 

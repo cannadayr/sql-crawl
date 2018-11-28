@@ -1,5 +1,16 @@
 .load sqlitepipe/sqlitepipe
 
+/*
+-- Use this for manually testing a url!
+with whitelisted_url(id,domain,url,path,rank) as (
+    select
+        1,
+        'https://www.example.com',
+        'https://www.example.com/?var=val',
+        '/?var=val',
+        0.00015
+),
+*/
 with whitelisted_url(id,domain,url,path,rank) as (
    select
         whitelist.id,
